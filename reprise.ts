@@ -3,6 +3,9 @@ import type {WriteStream} from 'fs';
 import {shuffle, range, negate, isEmpty, groupBy} from 'lodash';
 import type {Clause} from './common';
 import {parseInput} from './common';
+import yargs from 'yargs/yargs';
+
+const options = yargs(process.argv.slice(2)).demandOption(['board', 'dict', 'output-chars', 'output-cnf', 'output-header']).argv;
 
 let clauseCount = 0;
 
@@ -48,9 +51,9 @@ const encodeRange = (start: number, end: number, variables: number[], writer: Wr
 };
 
 (async () => {
-	const {constraints, cells} = parseInput(await fs.readFile('input2.txt'));
+	const {constraints, cells} = parseInput(await fs.readFile(options.board));
 
-	const dictionaryBuffer = await fs.readFile('dictionary.txt');
+	const dictionaryBuffer = await fs.readFile(options.dict);
 	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !/^[っんぢづぁぃぅぇぉゃゅょ]/.test(word));
 	const wordsByLength = groupBy(words, (word) => word.length);
 
@@ -58,18 +61,18 @@ const encodeRange = (start: number, end: number, variables: number[], writer: Wr
 	const cellChars = cells.map(() => shuffle(charset));
 	const cellCharMaps = cellChars.map((chars) => new Map(chars.map((c, i) => [c, i])));
 
-	await fs.writeFile('chars.json', JSON.stringify(cellChars));
+	await fs.writeFile(options.outputChars, JSON.stringify(cellChars));
 
 	let nextIndex = 1;
 	for (const cell of cells) {
 		nextIndex += 7;
 	}
 
-	await fs.unlink('test.cnf');
+	await fs.unlink(options.outputCnf);
 	for (const constraint of constraints) {
 		console.error(constraint);
 
-		const writer = createWriteStream('test.cnf', {flags: 'a'});
+		const writer = createWriteStream(options.outputCnf, {flags: 'a'});
 
 		const charMaps = constraint.map((cell) => cellCharMaps[cell]);
 		const words = wordsByLength[constraint.length];
@@ -95,5 +98,5 @@ const encodeRange = (start: number, end: number, variables: number[], writer: Wr
 		});
 	}
 
-	await fs.writeFile('header.cnf', `p cnf ${nextIndex - 1} ${clauseCount}\n`);
+	await fs.writeFile(options.outputHeader, `p cnf ${nextIndex - 1} ${clauseCount}\n`);
 })();

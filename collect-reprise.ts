@@ -1,9 +1,12 @@
 import {promises as fs} from 'fs';
+import yargs from 'yargs/yargs';
+
+const options = yargs(process.argv.slice(2)).demandOption(['board', 'cnf', 'chars']).argv;
 
 (async () => {
-  let input = (await fs.readFile('input3.txt')).toString().replace(/ /g, '　');
-  const lines = (await fs.readFile('result.cnf')).toString().split('\n');
-  const chars: string[][] = JSON.parse((await fs.readFile('chars.json')).toString());
+  let input = (await fs.readFile(options.board)).toString().replace(/ /g, '　');
+  const lines = (await fs.readFile(options.cnf)).toString().split('\n');
+  const chars: string[][] = JSON.parse((await fs.readFile(options.chars)).toString());
 
   const variables: number[] = [];
 

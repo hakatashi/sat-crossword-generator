@@ -2,11 +2,14 @@ import {promises as fs} from 'fs';
 import {shuffle, range, negate, isEmpty, groupBy} from 'lodash';
 import type {Clause} from './common';
 import {dnf2cnf, exactOne, parseInput} from './common';
+import yargs from 'yargs/yargs';
+
+const options = yargs(process.argv.slice(2)).demandOption(['board', 'dict', 'output-chars', 'output-cnf']).argv;
 
 (async () => {
-	const {constraints, cells} = parseInput(await fs.readFile('boards/Y.txt'));
+	const {constraints, cells} = parseInput(await fs.readFile(options.board));
 
-	const dictionaryBuffer = await fs.readFile('dictionary.txt');
+	const dictionaryBuffer = await fs.readFile(options.dict);
 	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !/^[っんぢづぁぃぅぇぉゃゅょ]/.test(word));
 	const wordsByLength = groupBy(words, (word) => word.length);
 
@@ -14,7 +17,7 @@ import {dnf2cnf, exactOne, parseInput} from './common';
 	const cellChars = cells.map(() => shuffle(charset));
 	const cellCharMaps = cellChars.map((chars) => new Map(chars.map((c, i) => [c, i])));
 
-	await fs.writeFile('chars.json', JSON.stringify(cellChars));
+	await fs.writeFile(options.outputChars, JSON.stringify(cellChars));
 
 	const cnf: Clause[] = [];
 
@@ -39,7 +42,7 @@ import {dnf2cnf, exactOne, parseInput} from './common';
 		nextIndex = dnf2cnf(dnf, cnf, nextIndex);
 	}
 
-	await fs.writeFile('test2.cnf', [
+	await fs.writeFile(options.outputCnf, [
 		`p cnf ${nextIndex - 1} ${cnf.length}`,
 		...cnf.map((clause) => {
 			clause.push(0);

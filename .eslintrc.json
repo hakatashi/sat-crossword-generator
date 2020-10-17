@@ -1,8 +1,6 @@
 {
   "extends": "@hakatashi/eslint-config/typescript",
   "rules": {
-    "array-plural/array-plural": "off",
-    "no-console": "off",
-    "import/extensions": "off"
+    "array-plural/array-plural": "off"
   }
 }

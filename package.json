@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/hakatashi/sat-crossword-generator#readme",
   "dependencies": {
-    "@hakatashi/eslint-config": "^1.13.0",
+    "@hakatashi/eslint-config": "^1.14.0",
     "@types/lodash": "^4.14.162",
     "@types/node": "^14.11.8",
     "eslint": "^7.11.0",

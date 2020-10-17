@@ -1,18 +1,31 @@
+import { log } from 'console';
 import {promises as fs} from 'fs';
 
 (async () => {
-  const lines = (await fs.readFile('output3.txt')).toString().split('\n');
+  const lines = (await fs.readFile('result.cnf')).toString().split('\n');
   const chars: string[][] = JSON.parse((await fs.readFile('chars.json')).toString());
 
+  const variables: number[] = [];
+
   for (const line of lines) {
-    const tokens = line.split(' ').slice(1);
-    for (const token of tokens) {
-      const n = parseInt(token);
-      if (n > 0) {
-        const cell = Math.floor((n - 1) / chars[0].length);
-        const charIndex = (n - 1) % chars[0].length;
-        console.log(chars[cell][charIndex]);
+    const tokens = line.split(' ');
+    if (tokens[0] === 's') {
+      if (tokens[1] !== 'SATISFIABLE') {
+        console.error('UNSAT :(');
+        return;
       }
     }
+
+    if (tokens[0] === 'v') {
+      for (const token of tokens.slice(1)) {
+        variables.push(parseInt(token));
+      }
+    }
+  }
+
+  for (const [i, charList] of chars.entries()) {
+    const charVariables = variables.slice(i * 7, i * 7 + 7);
+    const charIndex = parseInt(charVariables.map((v) => v > 0 ? '1' : '0').join(''), 2);
+    console.log(charList[charIndex]);
   }
 })();

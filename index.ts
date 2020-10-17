@@ -4,10 +4,10 @@ import type {Clause} from './common';
 import {dnf2cnf, exactOne, parseInput} from './common';
 
 (async () => {
-	const {constraints, cells} = parseInput(await fs.readFile('input.txt'));
+	const {constraints, cells} = parseInput(await fs.readFile('boards/Y.txt'));
 
 	const dictionaryBuffer = await fs.readFile('dictionary.txt');
-	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty));
+	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !/^[っんぢづぁぃぅぇぉゃゅょ]/.test(word));
 	const wordsByLength = groupBy(words, (word) => word.length);
 
 	const charset = Array.from(new Set(words.map((word) => Array.from(word)).flat()));
@@ -39,9 +39,11 @@ import {dnf2cnf, exactOne, parseInput} from './common';
 		nextIndex = dnf2cnf(dnf, cnf, nextIndex);
 	}
 
-	console.log(`p cnf ${nextIndex - 1} ${cnf.length}`);
-	for (const clause of cnf) {
-		clause.push(0);
-		console.log(clause.join(' '));
-	}
+	await fs.writeFile('test2.cnf', [
+		`p cnf ${nextIndex - 1} ${cnf.length}`,
+		...cnf.map((clause) => {
+			clause.push(0);
+			return clause.join(' ');
+		}),
+	].join('\n'));
 })();

@@ -48,11 +48,10 @@ const encodeRange = (start: number, end: number, variables: number[], writer: Wr
 };
 
 (async () => {
-	const {constraints, cells} = parseInput(await fs.readFile('input.txt'));
-	const writer = createWriteStream('test.cnf');
+	const {constraints, cells} = parseInput(await fs.readFile('input2.txt'));
 
 	const dictionaryBuffer = await fs.readFile('dictionary.txt');
-	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty));
+	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !/^[っんぢづぁぃぅぇぉゃゅょ]/.test(word));
 	const wordsByLength = groupBy(words, (word) => word.length);
 
 	const charset = Array.from(new Set(words.map((word) => Array.from(word)).flat()));
@@ -66,8 +65,12 @@ const encodeRange = (start: number, end: number, variables: number[], writer: Wr
 		nextIndex += 7;
 	}
 
+	await fs.unlink('test.cnf');
 	for (const constraint of constraints) {
 		console.error(constraint);
+
+		const writer = createWriteStream('test.cnf', {flags: 'a'});
+
 		const charMaps = constraint.map((cell) => cellCharMaps[cell]);
 		const words = wordsByLength[constraint.length];
 		
@@ -83,10 +86,14 @@ const encodeRange = (start: number, end: number, variables: number[], writer: Wr
 
 		encodeRange(nextWordNumber, 2 ** variables.length - 1, variables, writer);
 
-		await new Promise((resolve) => process.nextTick(resolve));
+		writer.end();
+
+		await new Promise((resolve) => {
+			writer.once('finish', () => {
+				resolve();
+			});
+		});
 	}
 
-	writer.end();
-
-	await fs.writeFile('header.cnf', `p cnf ${nextIndex - 1} ${clauseCount}`);
+	await fs.writeFile('header.cnf', `p cnf ${nextIndex - 1} ${clauseCount}\n`);
 })();

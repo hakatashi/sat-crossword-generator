@@ -1,47 +1,47 @@
 import {promises as fs} from 'fs';
 import {shuffle, range, negate, isEmpty, groupBy} from 'lodash';
-import type {, Clause} from './common';
+import type {Clause} from './common';
 import {dnf2cnf, exactOne, parseInput} from './common';
 
 (async () => {
-  const {constraints, cells} = parseInput(await fs.readFile('input.txt'));
+	const {constraints, cells} = parseInput(await fs.readFile('input.txt'));
 
-  const dictionaryBuffer = await fs.readFile('dictionary.txt');
-  const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty));
-  const wordsByLength = groupBy(words, (word) => word.length);
+	const dictionaryBuffer = await fs.readFile('dictionary.txt');
+	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty));
+	const wordsByLength = groupBy(words, (word) => word.length);
 
-  const charset = Array.from(new Set(words.map((word) => Array.from(word)).flat()));
-  const cellChars = cells.map(() => shuffle(charset));
-  const cellCharMaps = cellChars.map((chars) => new Map(chars.map((c, i) => [c, i])));
+	const charset = Array.from(new Set(words.map((word) => Array.from(word)).flat()));
+	const cellChars = cells.map(() => shuffle(charset));
+	const cellCharMaps = cellChars.map((chars) => new Map(chars.map((c, i) => [c, i])));
 
-  await fs.writeFile('chars.json', JSON.stringify(cellChars));
-  
-  const cnf: Clause[] = [];
+	await fs.writeFile('chars.json', JSON.stringify(cellChars));
 
-  let nextIndex = 1;
-  for (const cell of cells) {
-    const variables = range(nextIndex, nextIndex + charset.length);
-    exactOne(variables, cnf);
-    nextIndex += charset.length;
-  }
+	const cnf: Clause[] = [];
 
-  for (const constraint of constraints) {
-    const limitedWords = wordsByLength[constraint.length];
-    const dnf: Clause[] = [];
+	let nextIndex = 1;
+	for (const cell of cells) {
+		const variables = range(nextIndex, nextIndex + charset.length);
+		exactOne(variables, cnf);
+		nextIndex += charset.length;
+	}
 
-    for (const word of limitedWords) {
-      const clause = constraint.map((char, i) => (
-        char * charset.length + cellCharMaps[char].get(word[i])! + 1
-      ));
-      dnf.push(clause);
-    }
+	for (const constraint of constraints) {
+		const limitedWords = wordsByLength[constraint.length];
+		const dnf: Clause[] = [];
 
-    nextIndex = dnf2cnf(dnf, cnf, nextIndex);
-  }
+		for (const word of limitedWords) {
+			const clause = constraint.map((char, i) => (
+				char * charset.length + cellCharMaps[char].get(word[i])! + 1
+			));
+			dnf.push(clause);
+		}
 
-  console.log(`p cnf ${nextIndex - 1} ${cnf.length}`);
-  for (const clause of cnf) {
-    clause.push(0);
-    console.log(clause.join(' '));
-  }
+		nextIndex = dnf2cnf(dnf, cnf, nextIndex);
+	}
+
+	console.log(`p cnf ${nextIndex - 1} ${cnf.length}`);
+	for (const clause of cnf) {
+		clause.push(0);
+		console.log(clause.join(' '));
+	}
 })();

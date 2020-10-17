@@ -106,3 +106,4 @@ dist
 chars.json
 *.txt
 *.cnf
+!boards/*.txt

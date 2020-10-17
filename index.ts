@@ -4,20 +4,25 @@ import type {Clause} from './common';
 import {dnf2cnf, exactOne, parseInput} from './common';
 import yargs from 'yargs/yargs';
 
-const options = yargs(process.argv.slice(2)).demandOption(['board', 'dict', 'output-chars', 'output-cnf']).argv;
+const options = yargs(process.argv.slice(2))
+	.string('board')
+	.string('dict')
+	.string('output-chars')
+	.string('output-cnf')
+	.demandOption(['board', 'dict', 'output-chars', 'output-cnf']).argv;
 
 (async () => {
 	const {constraints, cells} = parseInput(await fs.readFile(options.board));
 
 	const dictionaryBuffer = await fs.readFile(options.dict);
-	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !/^[っんぢづぁぃぅぇぉゃゅょ]/.test(word));
+	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !/^[ーっんぢづぁぃぅぇぉゃゅょ]/.test(word));
 	const wordsByLength = groupBy(words, (word) => word.length);
 
 	const charset = Array.from(new Set(words.map((word) => Array.from(word)).flat()));
 	const cellChars = cells.map(() => shuffle(charset));
 	const cellCharMaps = cellChars.map((chars) => new Map(chars.map((c, i) => [c, i])));
 
-	await fs.writeFile(options.outputChars, JSON.stringify(cellChars));
+	await fs.writeFile(options['output-chars'], JSON.stringify(cellChars));
 
 	const cnf: Clause[] = [];
 
@@ -42,7 +47,7 @@ const options = yargs(process.argv.slice(2)).demandOption(['board', 'dict', 'out
 		nextIndex = dnf2cnf(dnf, cnf, nextIndex);
 	}
 
-	await fs.writeFile(options.outputCnf, [
+	await fs.writeFile(options['output-cnf'], [
 		`p cnf ${nextIndex - 1} ${cnf.length}`,
 		...cnf.map((clause) => {
 			clause.push(0);

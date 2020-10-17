@@ -1,7 +1,11 @@
 import {promises as fs} from 'fs';
 import yargs from 'yargs/yargs';
 
-const options = yargs(process.argv.slice(2)).demandOption(['board', 'cnf', 'chars']).argv;
+const options = yargs(process.argv.slice(2))
+	.string('board')
+	.string('cnf')
+	.string('chars')
+  .demandOption(['board', 'cnf', 'chars']).argv;
 
 (async () => {
   let input = (await fs.readFile(options.board)).toString().replace(/ /g, '　');

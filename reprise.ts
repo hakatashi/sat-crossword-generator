@@ -54,7 +54,7 @@ const encodeRange = (start: number, end: number, variables: number[], writer: Wr
 	const {constraints, cells} = parseInput(await fs.readFile(options.board));
 
 	const dictionaryBuffer = await fs.readFile(options.dict);
-	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !/^[っんぢづぁぃぅぇぉゃゅょ]/.test(word));
+	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !/^[ーっんぢづぁぃぅぇぉゃゅょ]/.test(word));
 	const wordsByLength = groupBy(words, (word) => word.length);
 
 	const charset = Array.from(new Set(words.map((word) => Array.from(word)).flat()));

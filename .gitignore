@@ -104,6 +104,7 @@ dist
 .tern-port
 
 chars.json
+chars-*.json
 *.txt
 *.cnf
 !boards/*.txt

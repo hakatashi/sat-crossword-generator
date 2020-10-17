@@ -114,18 +114,19 @@ const exactOne = (variables: number[], cnf: Clause[]) => {
   const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty));
   const wordsByLength = groupBy(words, (word) => word.length);
 
-  const chars = shuffle(Array.from(new Set(words.map((word) => Array.from(word)).flat())));
-  const charToIndex = new Map(chars.map((c, i) => [c, i]));
+  const charset = Array.from(new Set(words.map((word) => Array.from(word)).flat()));
+  const cellChars = cells.map(() => shuffle(charset));
+  const cellCharMaps = cellChars.map((chars) => new Map(chars.map((c, i) => [c, i])));
 
-  await fs.writeFile('chars.json', JSON.stringify(chars));
+  await fs.writeFile('chars.json', JSON.stringify(cellChars));
   
   const cnf: Clause[] = [];
 
   let nextIndex = 1;
   for (const cell of cells) {
-    const variables = range(nextIndex, nextIndex + chars.length);
+    const variables = range(nextIndex, nextIndex + charset.length);
     exactOne(variables, cnf);
-    nextIndex += chars.length;
+    nextIndex += charset.length;
   }
 
   for (const constraint of constraints) {
@@ -134,7 +135,7 @@ const exactOne = (variables: number[], cnf: Clause[]) => {
 
     for (const word of limitedWords) {
       const clause = constraint.map((char, i) => (
-        char * chars.length + charToIndex.get(word[i])! + 1
+        char * charset.length + cellCharMaps[char].get(word[i])! + 1
       ));
       dnf.push(clause);
     }

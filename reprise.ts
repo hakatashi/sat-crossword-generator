@@ -1,9 +1,9 @@
 import {promises as fs, createWriteStream} from 'fs';
 import type {WriteStream} from 'fs';
 import {shuffle, range, negate, isEmpty, groupBy} from 'lodash';
+import yargs from 'yargs/yargs';
 import type {Clause} from './common';
 import {parseInput} from './common';
-import yargs from 'yargs/yargs';
 
 const options = yargs(process.argv.slice(2)).demandOption(['board', 'dict', 'output-chars', 'output-cnf', 'output-header']).argv;
 
@@ -54,7 +54,7 @@ const encodeRange = (start: number, end: number, variables: number[], writer: Wr
 	const {constraints, cells} = parseInput(await fs.readFile(options.board));
 
 	const dictionaryBuffer = await fs.readFile(options.dict);
-	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !/^[ーっんぢづぁぃぅぇぉゃゅょ]/.test(word));
+	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !(/^[ーっんぢづぁぃぅぇぉゃゅょ]/).test(word));
 	const wordsByLength = groupBy(words, (word) => word.length);
 
 	const charset = Array.from(new Set(words.map((word) => Array.from(word)).flat()));
@@ -76,7 +76,7 @@ const encodeRange = (start: number, end: number, variables: number[], writer: Wr
 
 		const charMaps = constraint.map((cell) => cellCharMaps[cell]);
 		const words = wordsByLength[constraint.length];
-		
+
 		const wordNumbers = words.map((word) => word2int(word, charMaps));
 		wordNumbers.sort((a, b) => a - b);
 

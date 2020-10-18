@@ -1,8 +1,8 @@
 import {promises as fs} from 'fs';
 import {shuffle, range, negate, isEmpty, groupBy} from 'lodash';
+import yargs from 'yargs/yargs';
 import type {Clause} from './common';
 import {dnf2cnf, exactOne, parseInput} from './common';
-import yargs from 'yargs/yargs';
 
 const options = yargs(process.argv.slice(2))
 	.string('board')
@@ -15,7 +15,7 @@ const options = yargs(process.argv.slice(2))
 	const {constraints, cells} = parseInput(await fs.readFile(options.board));
 
 	const dictionaryBuffer = await fs.readFile(options.dict);
-	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !/^[ーっんぢづぁぃぅぇぉゃゅょ]/.test(word));
+	const words = dictionaryBuffer.toString().split('\n').filter(negate(isEmpty)).filter((word) => !(/^[ーっんぢづぁぃぅぇぉゃゅょ]/).test(word));
 	const wordsByLength = groupBy(words, (word) => word.length);
 
 	const charset = Array.from(new Set(words.map((word) => Array.from(word)).flat()));
